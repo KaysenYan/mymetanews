@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <title>更新新闻数据</title>
+    <!-- Bootstrap -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <!--新闻列表页面的样式-->
+    <link href="../css/newsListPages.css" rel="stylesheet">
+    <!--jquery-->
+    <script src="../js/jquery-3.3.1.min.js"></script>
+    <!--bootstrap-->
+    <script src="../js/bootstrap.min.js"></script>
+    <!--vue-->
+    <script src="../js/vue.min.js"></script>
+    <!--axios ajax-->
+    <script src="../js/axios.min.js"></script>
+    <style>
+        #jsondata {
+            width: 1000px;
+            height: 400px;
+        }
+
+        #btnDiv button {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="container-fluid">
+    <!--导航栏-->
+    <header id="navibar" class="container-fluid">
+        <nav class="navbar navbar-default row">
+            <div class="col-xs-2"></div>
+            <div class="container-fluid col-xs-10">
+                <div class="navbar-header">
+                    <!--汉堡按钮 data-target="#navibarDiv" id要对应-->
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                            data-target="#navibarDiv" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/">
+                        <img alt="首页" src="../img/META_hrz_tpbg.png" style="max-width:100px;margin-top:-7px;">
+                    </a>
+                </div>
+                <div class="collapse navbar-collapse" id="navibarDiv">
+                    <ul class="nav navbar-nav" style="margin-left: 30px">
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="zonghe.html">综合新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="toutiao.html">今日头条</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="yule.html">娱乐新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="guoji.html">国际新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="it.html">IT资讯</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="qiche.html">汽车新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="lvyou.html">旅游资讯</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="keji.html">科技新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="jiankang.html">健康知识</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="youxi.html">游戏资讯</a></li>
+                    </ul>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+    </header>
+
+    <div class="container bodyDiv">
+        <br>
+        <div class="alert alert-info" role="alert">
+            <strong id="serverInfo">服务器信息：{{serverInfo}}</strong>
+        </div>
+
+        <div class="btn-group btn-group-lg">
+            <button class="btn btn-primary" @click="saveAll()">更新所有新闻</button>
+        </div>
+        <br>
+        <div id="btnDiv" class="btn-group btn-group-lg">
+            <button class="btn btn-default" @click="save(1)">综合1</button>
+            <button class="btn btn-default" @click="save(2)">头条2</button>
+            <button class="btn btn-default" @click="save(3)">娱乐3</button>
+            <button class="btn btn-default" @click="save(4)">国际4</button>
+            <button class="btn btn-default" @click="save(5)">IT5</button>
+
+            <button class="btn btn-default" @click="save(6)">汽车6</button>
+            <button class="btn btn-default" @click="save(7)">旅游7</button>
+            <button class="btn btn-default" @click="save(8)">科技8</button>
+            <button class="btn btn-default" @click="save(9)">健康9</button>
+            <button class="btn btn-default" @click="save(10)">游戏10</button>
+        </div>
+    </div>
+
+</div>
+<script>
+    var app = new Vue({
+        el: "#app",
+        data: {
+            urls: ["0"
+                , "http://api.tianapi.com/generalnews/index"
+                , "http://api.tianapi.com/topnews/index"
+                , "http://api.tianapi.com/huabian/index"
+                , "http://api.tianapi.com/world/index"
+                , "http://api.tianapi.com/it/index"
+                , "http://api.tianapi.com/auto/index"
+                , "http://api.tianapi.com/travel/index"
+                , "http://api.tianapi.com/keji/index"
+                , "http://api.tianapi.com/health/index"
+                , "http://api.tianapi.com/game/index"
+            ],
+            key: "",
+            num: 50, //每页请求条数
+            pages: [4, 3, 2, 1], //页面1-4，一次请求200条
+            records: "", //数据回显
+            serverInfo: "" //服务器返回的消息回显
+        },
+        created: function () { //钩子方法
+            this.getKey(); //获取key
+        },
+        methods: {
+            save: function (newsType) { //更新新闻数据方法，newsType:新闻类型，1-10
+                this.download(newsType);
+            },
+            download: function (newsType) { //从天行下载数据
+                var that = this;
+                var date = new Date(); //用于显示时间
+                for (var i = 0; i < this.pages.length; i++) { //遍历请求页号，发送多次请求
+                    axios.get( //向天行API发送异步的get请求
+                        this.urls[newsType],
+                        {
+                            params: {
+                                key: this.key,
+                                num: this.num,
+                                page: this.pages[i]
+                            }
+                        }
+                    ).then(function (res) {
+                        if (res.data.code == 200) { //如果请求成功，将数据上传服务器
+                            that.upload(res.data, newsType);
+                        } else { //天行返回的是错误码
+                            console.log(res.data);
+                            that.serverInfo = res.data.msg + date; //页面显示失败信息
+                        }
+                    }).catch(function (err) {
+                        that.serverInfo = err + date; //页面显示失败信息
+                    });
+                }
+            },
+            upload: function (data, newsType) { //将数据上传服务器
+                var that = this;
+                //this.records = data; //将数据回显页面文本域
+                var date = new Date();
+                axios.post(
+                    "/newsManage/save/" + newsType,
+                    {
+                        newslist: data.newslist
+                    }
+                ).then(function (res) {
+                    that.serverInfo = res.data.msg + date; //页面显示成功信息
+                }).catch(function (err) {
+                    that.serverInfo = err.data.msg + date; //页面显示失败信息
+                });
+            },
+            saveAll: function () { //更新所有类型的新闻数据
+                for (var i = 1; i < this.urls.length; i++) {
+                    this.save(i);
+                }
+            },
+            getKey: function () { //获取天行key
+                var that = this;
+                axios.get("/newsManage/getKey"
+                ).then(function (res) {
+                    if (res.data.flag) {
+                        that.key = res.data.data;
+                        that.serverInfo = "准备就绪";
+                    } else {
+                        that.serverInfo = "key加载失败，请刷新重试";
+                    }
+                });
+            },
+            //鼠标移入添加active样式
+            addActive: function ($event) {
+                $event.currentTarget.className = "active";
+            },
+            //鼠标移出移除active样式
+            removeActive: function ($event) {
+                $event.currentTarget.className = "";
+            },
+        }
+    });
+</script>
+</body>
+</html>

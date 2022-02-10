@@ -1,0 +1,5 @@
+#选择运行环境
+spring:
+  profiles:
+    active: dev
+#    active: prod

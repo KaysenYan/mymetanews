@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <title>用户信息管理</title>
+    <!-- Bootstrap -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <!--新闻列表页面的样式-->
+    <link href="../css/newsListPages.css" rel="stylesheet">
+    <!--jquery-->
+    <script src="../js/jquery-3.3.1.min.js"></script>
+    <!--bootstrap-->
+    <script src="../js/bootstrap.min.js"></script>
+    <!--vue-->
+    <script src="../js/vue.min.js"></script>
+    <!--axios ajax-->
+    <script src="../js/axios.min.js"></script>
+    <style>
+        #userDataTable th {
+            white-space: nowrap;
+        }
+
+        .shortP {
+            width: 80px;
+            word-break: break-all;
+        }
+
+        .longP {
+            width: 250px;
+            word-break: break-all;
+            overflow: hidden; /* 超出的文本隐藏 */
+            text-overflow: ellipsis; /* 溢出用省略号显示 */
+            display: -webkit-box; /* 将对象作为弹性伸缩盒子模型显示 */
+            -webkit-box-orient: vertical; /* 这个属性不是css的规范属性，需要组合上面两个属性，表示显示的行数 */
+            -webkit-line-clamp: 4; /*  从上到下垂直排列子元素（设置伸缩盒子的子元素排列方式） */
+        }
+
+        .pageInfo {
+            /*分页信息部分*/
+            float: left;
+            margin-left: 50px;
+        }
+
+        .pageInfo > * {
+            /*分页信息部分字体大小*/
+            font-size: 20px;
+        }
+
+        .jumpPage {
+            /*跳页文字*/
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body style="background-image:url('../img/bg_star1.gif')">
+<div id="app" class="container-fluid">
+    <!--导航栏-->
+    <header id="navibar" class="container-fluid">
+        <nav class="navbar navbar-default row">
+            <div class="col-xs-2"></div>
+            <div class="container-fluid col-xs-10">
+                <div class="navbar-header">
+                    <!--汉堡按钮 data-target="#navibarDiv" id要对应-->
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                            data-target="#navibarDiv" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/">
+                        <img alt="首页" src="../img/META_hrz_tpbg.png" style="max-width:100px;margin-top:-7px;">
+                    </a>
+                </div>
+                <div class="collapse navbar-collapse" id="navibarDiv">
+                    <ul class="nav navbar-nav" style="margin-left: 30px">
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="zonghe.html">综合新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="toutiao.html">今日头条</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="yule.html">娱乐新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="guoji.html">国际新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="it.html">IT资讯</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="qiche.html">汽车新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="lvyou.html">军事新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="keji.html">科技新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="jiankang.html">健康知识</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="youxi.html">游戏资讯</a></li>
+                    </ul>
+                    <ul class="nav navbar-nav" style="margin-left: 60px">
+                        <a href="userhome.html" type="button" class="btn btn-default navbar-btn"
+                           v-show="isLoggedin">个人中心</a>
+                        <button @click="logout()" type="button" class="btn btn-default navbar-btn"
+                                v-show="isLoggedin">退出登录
+                        </button>
+                        <a href="login.html" type="button" class="btn btn-default navbar-btn"
+                           v-show="!isLoggedin">登录</a>
+                        <a href="register.html" type="button" class="btn btn-default navbar-btn"
+                           v-show="!isLoggedin">注册</a>
+                    </ul>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+    </header>
+    <div class="container-fluid bodyDiv">
+        <!--标题 + 搜索框-->
+        <div class="navbar-form">
+            <div class="form-group">
+                <!--新闻分类名-->
+                <strong class="form-control"
+                        style="font-size: 28px;color: darkred;height: 50px;margin: 5px;text-align: center">用户信息管理</strong>
+                <button class="btn btn-info" data-toggle="modal" data-target="#newUserModal">新增用户</button>
+            </div>
+        </div>
+        <!--表格部分-->
+        <div class="table-responsive">
+            <table id="userDataTable" class="table table-striped table-hover">
+                <tr class="info">
+                    <th>id</th>
+                    <th>用户名</th>
+                    <th>邮箱</th>
+                    <th>性别号</th>
+                    <th>性别</th>
+                    <th>生日</th>
+                    <th>角色号</th>
+                    <th>角色名</th>
+                    <th>乐观锁版本号</th>
+                    <th>个性签名</th>
+                    <th>修改操作</th>
+                    <th>删除操作</th>
+                </tr>
+                <tr v-for="item in records">
+                    <td><p class="shortP">{{item.id}}</p></td>
+                    <td><p class="longP">{{item.username}}</p></td>
+                    <td><p class="longP">{{item.email}}</p></td>
+                    <td><p class="shortP">{{item.gender.code}}</p></td>
+                    <td><p class="shortP">{{item.gender.gender}}</p></td>
+                    <td><p class="shortP" style="width: 120px">{{item.birthday}}</p></td>
+                    <td><p class="shortP">{{item.role.code}}</p></td>
+                    <td><p class="shortP">{{item.role.roleName}}</p></td>
+                    <td><p class="shortP">{{item.version}}</p></td>
+                    <td><p class="longP">{{item.introduction}}</p></td>
+                    <td>
+                        <button class="btn btn-info" data-toggle="modal" data-target="#updateUserModal"
+                                @click="preUpdateItem(item.id)">修改
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger" @click="deleteItem(item.id)">删除</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!--分页信息+跳页输入框+每页条数选择框-->
+        <div class="pagination pagination-lg pageInfo" v-show="records.length>0">
+            <span>当前页共<strong>{{records.length}}</strong>条</span>
+            <span>&nbsp;共<strong>{{pages}}</strong>页</span>
+            <!--页号输入框-->
+            <span class="jumpPage">
+                <span>跳转到:</span>
+                <input type="number" min="1" :max="pages" v-model="jumpPageNum" class="input-group-sm"
+                       style="width: 50px" @keyup.enter="jumpPage()">
+                <button @click="jumpPage()" class="btn-info">GO</button>
+            </span>
+            <!--每页条数选择框-->
+            <span style="margin-left: 10px">
+                <span>每页显示条数</span>
+                <select v-model="size" class="input-group-sm" @change="refreshData(1)">
+                <option>10</option>
+                <option>20</option>
+                <option>50</option>
+            </select></span>
+        </div>
+        <!--下面的翻页-->
+        <div v-show="records.length>0" class="fanye">
+            <ul class="pagination" :class="screenWidth>=400 ? 'pagination-lg' : 'pagination-sm'">
+                <!--首页-->
+                <li :class="current<=1 ? 'disabled' : ''">
+                    <a @click="firstPage()" role="button">
+                        <span aria-hidden="true">首页</span>
+                    </a>
+                </li>
+                <!--上一页-->
+                <li :class="current<=1 ? 'disabled' : ''">
+                    <a @click="prePage()" aria-label="Previous" role="button">
+                        <span aria-hidden="true">上一页</span>
+                    </a>
+                </li>
+                <!--当前页号-->
+                <li class="active"><a>{{current}}</a></li>
+                <!--下一页-->
+                <li :class="current>=pages ? 'disabled' : ''">
+                    <a @click="nextPage()" aria-label="Next" role="button">
+                        <span aria-hidden="true">下一页</span>
+                    </a>
+                </li>
+                <!--末页-->
+                <li :class="current>=pages ? 'disabled' : ''">
+                    <a @click="lastPage()" role="button">
+                        <span aria-hidden="true">末页</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <!-- 模态框（Modal）用于修改用户信息 -->
+    <div class="modal fade" id="updateUserModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">修改用户信息</h4>
+                </div>
+                <!--模态框主体-->
+                <div class="modal-body">
+                    <!--主键id-->
+                    <div class="form-group">
+                        <label>主键id：</label>
+                        <span>{{modalItem.id}}</span>
+                    </div>
+                    <!--用户名-->
+                    <div class="form-group">
+                        <label for="usernameInput">用户名：</label>
+                        <input type="text" class="form-control" id="usernameInput" placeholder="请输入用户名"
+                               v-model="modalItem.username">
+                    </div>
+                    <!--邮箱-->
+                    <div class="form-group">
+                        <label for="emailInput">邮箱：</label>
+                        <input type="text" class="form-control" id="emailInput" placeholder="请输入邮箱"
+                               v-model="modalItem.email">
+                    </div>
+                    <!--性别-->
+                    <label>性别：</label>
+                    <div class="radio form-group">
+                        <label>
+                            <input type="radio" name="genderRadios" id="optionsRadios1" value=1
+                                   :checked="modalItem.gender=='MALE'" @click="modalItem.gender='MALE'"> 男
+                        </label>
+                        <label style="margin-left: 20px">
+                            <input type="radio" name="genderRadios" id="optionsRadios2" value=2
+                                   :checked="modalItem.gender=='FEMALE'" @click="modalItem.gender='FEMALE'"> 女
+                        </label>
+                        <label style="margin-left: 20px">
+                            <input type="radio" name="genderRadios" id="optionsRadios3" value=0
+                                   :checked="modalItem.gender=='SECRET'" @click="modalItem.gender='SECRET'"> 保密
+                        </label>
+                    </div>
+                    <!--生日-->
+                    <div class="form-group">
+                        <label>生日</label>
+                        <input type="date" class="form-control" v-model="modalItem.birthday" min="1920-01-01"
+                               :max="today">
+                    </div>
+                    <!--角色-->
+                    <label>角色：</label>
+                    <div class="radio form-group">
+                        <label>
+                            <input type="radio" name="roleRadios" id="optionsRadio1" value=1
+                                   :checked="modalItem.role=='ADMIN'" @click="modalItem.role='ADMIN'"> 管理员
+                        </label>
+                        <label style="margin-left: 20px">
+                            <input type="radio" name="roleRadios" id="optionsRadio2" value=2
+                                   :checked="modalItem.role=='USER'" @click="modalItem.role='USER'"> 普通用户
+                        </label>
+                        </label>
+                    </div>
+                    <!--乐观锁版本号-->
+                    <div class="form-group">
+                        <label>乐观锁版本号：</label>
+                        <span>{{modalItem.version}}</span>
+                    </div>
+                    <!--个性签名-->
+                    <div class="form-group">
+                        <label>个性签名：</label><br>
+                        <textarea cols="50" rows="3" style="width: 100%;"
+                                  class="form-control" v-model="modalItem.introduction"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" @click="updateItemCommit()" data-toggle="modal"
+                            data-target="#updateUserModal">提交更改
+                    </button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- 模态框（Modal）用于新增用户 -->
+    <div class="modal fade" id="newUserModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="newUserModalLabel">新增用户</h4>
+                </div>
+                <!--模态框主体-->
+                <div class="modal-body">
+                    <!--邮箱输入框 QQ号-->
+                    <div class="form-group">
+                        <label for="inputQQ">QQ</label>
+                        <div class="input-group">
+                            <input id="inputQQ" type="text" class="form-control" placeholder="QQ号"
+                                   aria-describedby="basic-addon" v-model="newUserQQ">
+                            <span class="input-group-addon" id="basic-addon">@qq.com</span>
+                        </div>
+                    </div>
+                    <!--用户名-->
+                    <div class="form-group">
+                        <label for="inputUsername">用户名</label>
+                        <input type="text" class="form-control" id="inputUsername" placeholder="用户名"
+                               v-model="newUserUsername">
+                    </div>
+                    <!--密码-->
+                    <div class="form-group">
+                        <label for="inputPassword">密码</label>
+                        <input type="password" class="form-control" id="inputPassword" placeholder="密码"
+                               v-model="newUserPassword">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" @click="newUserCommit()" data-toggle="modal"
+                            data-target="#newUserModal">提交
+                    </button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!--占位div，防止页脚挡正文-->
+    <div style="height: 150px"></div>
+    <!--回顶按钮-->
+    <img src="/img/backToTop.png" alt="回到顶部" title="回到顶部" @click="returnTop()" class="img-circle"
+         style="background-color: ghostwhite;position: fixed;bottom: 120px;right: 20px"/>
+</div>
+<!--页脚-->
+<footer id="footer" class=""></footer>
+<script>
+    /*加载页脚*/
+    $("#footer").load("footer.html");
+    var app = new Vue({
+        el: "#app",
+        data: {
+            records: [], //新闻数据列表
+            total: 0, //总记录条数
+            current: 1, //当前页号
+            size: 10, //每页显示条数
+            pages: 0, //总页数
+            jumpPageNum: 1, //双向绑定，要跳转的页号
+            isLoggedin: false, //用户是否登录
+            screenWidth: 1024, //屏幕宽度
+            modalItemId: 0, //修改信息模态框条目Id
+            today: "", //今天的日期，生日可选择的日期上限
+            newUserQQ: "", //新用户QQ号
+            newUserUsername: "", //新用户用户名
+            newUserPassword: "", //新用户密码
+            //默认条目信息
+            defaultModalItem: {
+                "id": 0, "username": "", "password": "", "phone": "", "email": "", "gender":
+                    {"code": 0, "gender": ""}, "birthday": "", "introduction": "", "role": {"code": 0, "roleName": ""}
+                , "version": 0, "deleted": 0
+            },
+            //待修改的条目信息
+            modalItem: {
+                "id": 0, "username": "", "password": "", "phone": "", "email": "", "gender":
+                    {"code": 0, "gender": ""}, "birthday": "", "introduction": "", "role": {"code": 0, "roleName": ""}
+                , "version": 0, "deleted": 0
+            },
+            //性别类型
+            genderTypes: ["SECRET", "MALE", "FEMALE"],
+            //角色类型
+            roleTypes: ["", "ADMIN", "USER"],
+        },
+        created: function () {
+            this.checkLoginState();
+            this.refreshData(1);
+            this.screenWidth = document.body.clientWidth;
+            var that = this;
+            window.onresize = function () { //监听屏幕宽高变化
+                that.screenWidth = document.body.clientWidth;
+            };
+        },
+        methods: {
+            //更新数据列表
+            refreshData: function (page) {
+                this.curPage = page;
+                var that = this;
+                axios.get("/userManage/getPage", {
+                    params: {
+                        curPage: this.curPage,
+                        size: this.size
+                    }
+                }).then(function (res) {
+                    if (res.data.flag) {
+                        that.records = res.data.data.records; //新闻数据列表
+                        that.total = res.data.data.total; //总记录条数
+                        that.current = res.data.data.current; //当前页号
+                        that.pages = res.data.data.pages; //总页数
+                        that.returnTop(); //回到顶部
+                        that.autoFooter(); //自动页脚
+                    } else {
+                        alert(res.data.msg);
+                    }
+                }).catch(function (err) {
+                    console.log(err);
+                    that.returnTop(); //回到顶部
+                });
+            },
+            //获取要修改的条目信息
+            preUpdateItem: function (itemId) {
+                var that = this;
+                this.modalItem = this.defaultModalItem;
+                this.modalItemId = itemId;
+                axios.get("/userManage/user/" + itemId)
+                    .then(function (res) {
+                        if (res.data.flag) {
+                            that.modalItem = res.data.data;
+                            that.modalItem.gender = that.genderTypes[res.data.data.gender.code];
+                            that.modalItem.role = that.roleTypes[res.data.data.role.code];
+                        } else {
+                            alert(res.data.msg);
+                        }
+                    }).catch(function (err) {
+                    console.log(err);
+                })
+            },
+            //提交对新闻条目的修改
+            updateItemCommit: function () {
+                var that = this;
+                axios({
+                    method: 'put',
+                    url: "/userManage/user",
+                    data: this.modalItem
+                }).then(function (res) {
+                    if (res.data.flag) {
+
+                    } else {
+                        alert(res.data.msg);
+                    }
+                    that.refreshData(that.curPage);
+                }).catch(function (err) {
+                    console.log(err);
+                    that.refreshData(that.curPage);
+                })
+            },
+            //新增用户提交到后端
+            newUserCommit: function () {
+                var that = this;
+                axios.post("/userManage/user", {
+                    email: this.newUserQQ + "@qq.com",
+                    username: this.newUserUsername,
+                    password: this.newUserPassword
+                }).then(function (res) {
+                    if (res.data.flag){
+
+                    }else{
+                        alert(res.data.msg);
+                    }
+                    that.refreshData(that.curPage);
+                }).catch(function (errnoError) {
+                    console.log(err);
+                    that.refreshData(that.curPage);
+                });
+            },
+            //删除新闻条目，通过id
+            deleteItem: function (id) {
+                var that = this;
+                if (confirm("您确定要删除吗？")) {
+                    axios.delete("/userManage/user/" + id)
+                        .then(function (res) {
+                            if (res.data.flag) {
+
+                            } else {
+                                alert(res.data.msg);
+                            }
+                            that.refreshData(that.curPage);
+                        }).catch(function (err) {
+                        console.log(err);
+                        that.refreshData(that.curPage);
+                    });
+                }
+            },
+            //按页号跳转
+            jumpPage: function () {
+                if (this.jumpPageNum >= 1 && this.jumpPageNum <= this.pages) {
+                    this.refreshData(this.jumpPageNum);
+                }
+            },
+            //上一页
+            prePage: function () {
+                if (this.current > 1) { //不是第一页才能上一页
+                    this.refreshData(this.current - 1);
+                }
+            },
+            //下一页
+            nextPage: function () {
+                if (this.current < this.pages) { //不是最后一页才能下一页
+                    this.refreshData(this.current + 1);
+                }
+            },
+            //跳首页（第一页）
+            firstPage: function () {
+                if (this.current > 1) { //当前不是首页
+                    this.refreshData(1);
+                }
+            },
+            //跳末页
+            lastPage: function () {
+                if (this.current < this.pages) { //不是末页
+                    this.refreshData(this.pages);
+                }
+            },
+            //页面回到顶部
+            returnTop: function () {
+                navibar.scrollIntoView();
+            },
+            //鼠标移入添加active样式
+            addActive: function ($event) {
+                $event.currentTarget.className = "active";
+            },
+            //鼠标移出移除active样式
+            removeActive: function ($event) {
+                $event.currentTarget.className = "";
+            },
+            //检查用户是否登录，并且是管理员
+            checkLoginState: function () {
+                var that = this;
+                //获取今天的日期，生日可选择的日期上限
+                var date = new Date();
+                this.today = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+                axios.get("/user/checkLoginState")
+                    .then(function (res) {
+                        if (res.data.flag) { //已登录
+                            if (res.data.data.role.code != 1) {
+                                alert("请使用管理员账号登录");
+                                location.href = "login.html";
+                            }
+                            that.isLoggedin = true; //修改页面状态
+                            that.user = res.data.data; //存储当前用户数据
+                        } else { //未登录，跳转登录页
+                            alert("您当前尚未登录");
+                            location.href = "login.html";
+                        }
+                    }).catch(function (err) {
+                    console.log(err);
+                })
+            },
+            //用户退出登录
+            logout: function () {
+                var that = this;
+                if (confirm("您确定要退出吗？")) {
+                    axios.delete("/user/logout")
+                        .then(function (res) {
+                            if (res.data.flag) { //退出登录成功
+                                that.isLoggedin = false; //修改页面状态
+                                that.user = null; //还原默认user
+                                location.href = "login.html"; //跳转登录页
+                            }
+                        }).catch(function (err) {
+                        console.log(err);
+                    })
+                }
+            },
+            //自动页脚
+            autoFooter: function () {
+                //在vue下次渲染完成时执行
+                this.$nextTick(function () {
+                    //获取页面主体高度
+                    var appHeight = $("#app").height();
+                    //获取页脚高度
+                    var footer = $("#footer");
+                    var footerHeight = footer.height();
+                    //获取屏幕高度
+                    var screenHeight = document.documentElement.clientHeight;
+                    //如果主体加页脚小于屏幕高度，将页脚固定在底部
+                    if (appHeight + footerHeight <= screenHeight) {
+                        footer.addClass("navbar-fixed-bottom");
+                    } else {
+                        footer.removeClass("navbar-fixed-bottom");
+                    }
+                });
+            },
+            //页面回到顶部
+            returnTop: function () {
+                navibar.scrollIntoView();
+            },
+        }
+    })
+</script>
+</body>
+</html>

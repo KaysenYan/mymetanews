@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <title>用户注册</title>
+    <!-- Bootstrap -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <!--新闻列表页面的样式-->
+    <link href="../css/newsListPages.css" rel="stylesheet">
+    <!--jquery-->
+    <script src="../js/jquery-3.3.1.min.js"></script>
+    <!--bootstrap-->
+    <script src="../js/bootstrap.min.js"></script>
+    <!--vue-->
+    <script src="../js/vue.min.js"></script>
+    <!--axios ajax-->
+    <script src="../js/axios.min.js"></script>
+</head>
+<body style="background-image:url('../img/bg_star1.gif')">
+<div id="app" class="container-fluid">
+    <!--导航栏-->
+    <header id="navibar" class="container-fluid">
+        <nav class="navbar navbar-default row">
+            <!--占位div-->
+            <div class="col-xs-2"></div>
+            <div class="container-fluid col-xs-10">
+                <div class="navbar-header">
+                    <!--汉堡按钮 data-target="#navibarDiv" id要对应-->
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                            data-target="#navibarDiv" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/">
+                        <img alt="首页" src="../img/META_hrz_tpbg.png" style="max-width:100px;margin-top:-7px;">
+                    </a>
+                </div>
+                <div class="collapse navbar-collapse" id="navibarDiv">
+                    <ul class="nav navbar-nav" style="margin-left: 30px">
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="zonghe.html">综合新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="toutiao.html">今日头条</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="yule.html">娱乐新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="guoji.html">国际新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="it.html">IT资讯</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="qiche.html">汽车新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="lvyou.html">旅游资讯</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="keji.html">科技新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="jiankang.html">健康知识</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="youxi.html">游戏资讯</a></li>
+                    </ul>
+                    <ul class="nav navbar-nav" style="margin-left: 60px">
+                        <a href="login.html" type="button" class="btn btn-default navbar-btn">登录</a>
+                    </ul>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+    </header>
+    <!--中间主体-->
+    <div class="container bodyDiv">
+        <div class="container-fluid" style="padding: 30px;max-width: 600px">
+            <!--提示框-->
+            <div class="alert alert-warning" role="alert"><strong>{{serverInfo}}</strong></div>
+            <!--邮箱注册-->
+            <div v-show="registerMethod==1">
+                <h2>使用QQ邮箱注册</h2>
+                <!--邮箱输入框 QQ号-->
+                <div class="form-group">
+                    <label for="inputQQ">QQ</label>
+                    <span style="margin-left: 40px;color: red;float: right">{{qqInfo}}</span>
+                    <div class="input-group">
+                        <input id="inputQQ" type="text" class="form-control" placeholder="请输入QQ号"
+                               aria-describedby="basic-addon" v-model="inputQQ" @focusout="checkEmailState()">
+                        <span class="input-group-addon" id="basic-addon">@qq.com</span>
+                    </div>
+                </div>
+                <!--用户名-->
+                <div class="form-group">
+                    <label for="inputUsername">用户名</label>
+                    <span style="margin-left: 40px;color: red;float: right">{{usernameInfo}}</span>
+                    <input type="text" class="form-control" id="inputUsername" placeholder="请输入用户名"
+                           v-model="inputUsername" @focusout="checkUsername()">
+                </div>
+                <!--密码-->
+                <div class="form-group">
+                    <label for="inputPassword1">密码</label>
+                    <span style="margin-left: 40px;color: red;float: right">{{passwordInfo}}</span>
+                    <input type="password" class="form-control" id="inputPassword1" placeholder="请输入密码"
+                           v-model="inputPassword1" @focusout="checkPassword1()">
+                </div>
+                <!--确认密码-->
+                <div class="form-group">
+                    <label for="inputPassword2">确认密码</label>
+                    <span style="margin-left: 40px;color: red;float: right">{{password2Info}}</span>
+                    <input type="password" class="form-control" id="inputPassword2" placeholder="请再次输入密码"
+                           v-model="inputPassword2" @focusout="checkPassword2()">
+                </div>
+                <!--验证码-->
+                <div class="form-group">
+                    <label for="inputVeriCode">验证码</label>
+                    <span style="margin-left: 40px;color: red;float: right">{{veriCodeInfo}}</span>
+                    <div class="input-group">
+                        <input id="inputVeriCode" type="text" class="form-control" placeholder="请输入验证码"
+                               v-model="inputVeriCode" @focusout="checkVeriCode()" @keyup.enter="registerByEmail()">
+                        <span class="input-group-btn">
+                            <button id="getVeriBtn" class="btn btn-danger" :class="{'disabled':!veriBtnState}"
+                                    type="button" @click="getVeriCode()"
+                                    :disabled="!veriBtnState">{{veriBtnInfo}}</button>
+                        </span>
+                    </div>
+                </div>
+                <button @click="registerByEmail()" class="btn btn-primary">注册</button>
+                <!--<button @click="toggleToPhone()" class="btn btn-info" style="margin-left: 20px">使用手机号注册</button>-->
+                <a href="login.html" type="button" class="btn btn-default btn-warning"
+                   style="margin-left: 20px">去登录</a>
+            </div>
+        </div>
+    </div>
+    <!--占位div，防止页脚挡正文-->
+    <div style="height: 150px"></div>
+</div>
+<!--页脚-->
+<footer id="footer" class="navbar-fixed-bottom"></footer>
+<script>
+    /*加载页脚*/
+    $("#footer").load("footer.html");
+    var app = new Vue({
+        el: "#app",
+        data: {
+            serverInfo: "使用邮箱注册", //服务器回显信息
+            registerMethod: 1, //注册方式，1：邮箱，2：手机号
+            inputQQ: "", //输入的QQ号
+            inputPhone: "", //输入的手机号
+            inputUsername: "", //输入的用户名
+            inputPassword1: "", //输入的密码
+            inputPassword2: "", //确认密码
+            inputVeriCode: "", //输入的验证码
+            veriBtnState: true, //获取验证码按钮状态
+            veriBtnInfo: "获取验证码", //获取验证码按钮文字
+            countDown: 0, //倒计时秒数
+            qqInfo: "", //QQ框提示
+            usernameInfo: "", //username框提示
+            passwordInfo: "", //密码框1提示
+            password2Info: "", //确认密码框提示
+            veriCodeInfo: "", //验证码框提示
+            isLoggedin: false, //用户是否登录
+        },
+        created: function () {
+            this.checkLoginState();
+        },
+        methods: {
+            //鼠标移入添加active样式
+            addActive: function ($event) {
+                $event.currentTarget.className = "active";
+            },
+            //鼠标移出移除active样式
+            removeActive: function ($event) {
+                $event.currentTarget.className = "";
+            },
+            //检查该邮箱是否注册
+            checkEmailState: function () {
+                var that = this;
+                if (this.checkQQ()) { //先检查QQ号格式
+                    //数据库检查是否存在该邮箱
+                    axios.get("/user/checkEmailState",
+                        {
+                            params: {
+                                email: this.inputQQ + "@qq.com"
+                            }
+                        }
+                    ).then(function (res) {
+                        that.qqInfo = res.data.msg;
+                    }).catch(function (err) {
+                        console.log(err);
+                    })
+                }
+            },
+            //通过邮箱注册
+            registerByEmail: function () {
+                var that = this;
+                //先检验表单所有输入框
+                var flag = this.checkQQ() & this.checkPassword2() & this.checkUsername() & this.checkVeriCode();
+                if (flag) {
+                    //向服务器发送注册请求
+                    axios.post("/user/registerByEmail", {
+                        email: this.inputQQ + "@qq.com",
+                        username: this.inputUsername,
+                        password: this.inputPassword1,
+                        veriCode: this.inputVeriCode
+                    }).then(function (res) {
+                        that.serverInfo = res.data.msg;
+                        if (res.data.flag) { //注册成功，2秒后跳转登录页
+                            setTimeout("location.href = 'login.html'", 2000);
+                        }
+                    }).catch(function (err) {
+                        console.log(err);
+                    });
+                }
+            },
+            //获取验证码
+            getVeriCode: function () {
+                var that = this;
+                //验证码按钮可用，且QQ号格式正确
+                if (this.veriBtnState && this.checkQQ()) {
+                    this.veriBtnState = false; //禁用按钮
+                    this.countDown = 120; //按钮倒计时
+                    //创建一个计时器
+                    var timer = setInterval(() => {
+                        this.countDown--; //倒计时-1秒
+                        this.veriBtnInfo = this.countDown + "秒后可重新获取";
+                        if (this.countDown <= 0) { //倒计时结束
+                            this.veriBtnState = true; //按钮重新可用
+                            this.veriBtnInfo = "获取验证码";
+                            clearInterval(timer); //终止计时器
+                        }
+                    }, 1000);
+                    //向服务器请求发送邮箱验证码
+                    axios.get("/user/getRegisterEmailVeriCode",
+                        {
+                            params: {
+                                email: this.inputQQ + "@qq.com"
+                            }
+                        }
+                    ).then(function (res) {
+                        that.serverInfo = res.data.msg; //服务器信息，验证码发送成功或失败
+                    }).catch(function (err) {
+                        console.log(err);
+                    });
+                }
+            },
+            //检查密码格式
+            checkPassword1: function () {
+                var reg = /\w{6,30}/; //密码：字母数字下划线，6-30位
+                var flag = reg.test(this.inputPassword1);
+                if (flag) {
+                    this.passwordInfo = "";
+                } else {
+                    this.passwordInfo = "密码格式：字母+数字，长度6-30位";
+                }
+                return flag;
+            },
+            //检查确认密码
+            checkPassword2: function () {
+                //先检查密码1
+                var flag = this.checkPassword1();
+                if (flag && this.inputPassword1 == this.inputPassword2) {
+                    //密码格式正确，且两次密码相同
+                    this.password2Info = "";
+                    flag = true;
+                } else {
+                    this.password2Info = "两次输入的密码不一致";
+                    flag = false;
+                }
+                return flag;
+            },
+            //检查QQ号格式
+            checkQQ: function () {
+                var reg = /^\d{5,12}$/; //QQ号：纯数字5-12位
+                var flag = reg.test(this.inputQQ); //检查输入的是否为纯数字
+                if (flag) {
+                    this.qqInfo = "";
+                } else {
+                    this.qqInfo = "请输入正确的QQ号";
+                }
+                return flag;
+            },
+            //检查用户名格式，不能为空
+            checkUsername: function () {
+                var flag = false;
+                if (this.inputUsername.trim().length == 0) {
+                    this.inputUsername = "";
+                    this.usernameInfo = "请输入用户名";
+                } else if (this.inputUsername.trim().length >= 30) {
+                    this.usernameInfo = "用户名太长了！减短一点吧";
+                } else {
+                    this.usernameInfo = "";
+                    flag = true;
+                }
+                return flag;
+            },
+            //检查验证码格式
+            checkVeriCode: function () {
+                var flag = false;
+                if (this.inputVeriCode.trim().length == 0) {
+                    this.inputVeriCode = "";
+                    this.veriCodeInfo = "请输入验证码";
+                } else {
+                    this.veriCodeInfo = "";
+                    flag = true;
+                }
+                return flag;
+            },
+            //检查用户是否登录
+            checkLoginState: function () {
+                var that = this;
+                axios.get("/user/checkLoginState")
+                    .then(function (res) {
+                        if (res.data.flag) { //已登录
+                            that.isLoggedin = true; //修改页面状态
+                            location.href = 'userhome.html'; //跳转用户主页
+                        }
+                    }).catch(function (err) {
+                    console.log(err);
+                })
+            },
+        }
+    })
+</script>
+</body>
+</html>

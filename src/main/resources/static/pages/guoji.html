@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <title>国际新闻</title>
+    <!-- Bootstrap -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <!--新闻列表页面的样式-->
+    <link href="../css/newsListPages.css" rel="stylesheet">
+    <!--jquery-->
+    <script src="../js/jquery-3.3.1.min.js"></script>
+    <!--bootstrap-->
+    <script src="../js/bootstrap.min.js"></script>
+    <!--vue-->
+    <script src="../js/vue.min.js"></script>
+    <!--axios ajax-->
+    <script src="../js/axios.min.js"></script>
+</head>
+<body style="background-image:url('../img/bg_star1.gif')">
+<!--主体，包括导航栏-->
+<div id="app" class="container-fluid app">
+    <!--导航栏-->
+    <header id="navibar" class="container-fluid">
+        <nav class="navbar navbar-default row">
+            <div class="col-xs-2"></div>
+            <div class="container-fluid col-xs-10">
+                <div class="navbar-header">
+                    <!--汉堡按钮 data-target="#navibarDiv" id要对应-->
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                            data-target="#navibarDiv" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/">
+                        <img alt="首页" src="../img/META_hrz_tpbg.png" style="max-width:100px;margin-top:-7px;">
+                    </a>
+                </div>
+                <div class="collapse navbar-collapse" id="navibarDiv">
+                    <ul class="nav navbar-nav" style="margin-left: 30px">
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="zonghe.html">综合新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="toutiao.html">今日头条</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="yule.html">娱乐新闻</a></li>
+                        <li class="active">
+                            <a href="guoji.html">国际新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="it.html">IT资讯</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="qiche.html">汽车新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="lvyou.html">旅游资讯</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="keji.html">科技新闻</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="jiankang.html">健康知识</a></li>
+                        <li @mouseover="addActive($event)" @mouseout="removeActive($event)">
+                            <a href="youxi.html">游戏资讯</a></li>
+                    </ul>
+                    <ul class="nav navbar-nav" style="margin-left: 60px">
+                        <a href="userhome.html" type="button" class="btn btn-default navbar-btn"
+                           v-show="isLoggedin">个人中心</a>
+                        <button @click="logout()" type="button" class="btn btn-default navbar-btn"
+                                v-show="isLoggedin">退出登录
+                        </button>
+                        <a href="login.html" type="button" class="btn btn-default navbar-btn"
+                           v-show="!isLoggedin">登录</a>
+                        <a href="register.html" type="button" class="btn btn-default navbar-btn"
+                           v-show="!isLoggedin">注册</a>
+                    </ul>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+    </header>
+    <!--新闻列表部分-->
+    <div class="list-group container bodyDiv">
+        <!--搜索栏-->
+        <div id="searchDiv" class="container">
+            <div class="navbar-form navbar-left">
+                <div class="form-group">
+                    <!--新闻分类名-->
+                    <strong class="form-control"
+                            style="font-size: 28px;color: darkred;height: 50px;margin: 5px;text-align: center">国际新闻</strong>
+                    <!--搜索框-->
+                    <input type="text" class="form-control input-lg" placeholder="请输入关键字" v-model.trim="keyword"
+                           @keyup.enter="searchByKeyword()">
+                </div>
+                <button type="button" class="btn btn-primary btn-lg" @click="searchByKeyword()">搜索</button>
+                <button type="button" class="btn btn-success btn-lg" @click="clearKeyword()">清空</button>
+            </div>
+            <!--上面的翻页-->
+            <div v-show="records.length>0" class="fanye">
+                <ul class="pagination" :class="screenWidth>=400 ? 'pagination-lg' : 'pagination-sm'">
+                    <!--首页-->
+                    <li :class="current<=1 ? 'disabled' : ''">
+                        <a @click="firstPage()" role="button">
+                            <span aria-hidden="true">首页</span>
+                        </a>
+                    </li>
+                    <!--上一页-->
+                    <li :class="current<=1 ? 'disabled' : ''">
+                        <a @click="prePage()" aria-label="Previous" role="button">
+                            <span aria-hidden="true">上一页</span>
+                        </a>
+                    </li>
+                    <!--当前页号-->
+                    <li class="active"><a>{{current}}</a></li>
+                    <!--下一页-->
+                    <li :class="current>=pages ? 'disabled' : ''">
+                        <a @click="nextPage()" aria-label="Next" role="button">
+                            <span aria-hidden="true">下一页</span>
+                        </a>
+                    </li>
+                    <!--末页-->
+                    <li :class="current>=pages ? 'disabled' : ''">
+                        <a @click="lastPage()" role="button">
+                            <span aria-hidden="true">末页</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!--新闻列表 栅格容器-->
+        <div class="container">
+            <!-- vue v-for 自动刷新列表数据 栅格行 -->
+            <div v-for="item in records" class="list-group-item newsBtn row"
+                 :style="{'min-height': screenWidth>=768 ? '200px' : '380px'}">
+                <!--左边文字部分-->
+                <div :class="screenWidth>=768 ? 'col-sm-8' : 'col-sm-12'">
+                    <!--新闻标题 -->
+                    <span>
+                        <a :href="item.url" class="list-group-item-heading newsTitle"
+                           target="view_window" style="color: darkblue; font-size: 20px;">
+                            {{item.title}}
+                        </a>
+                    </span>
+                    <!--新闻描述-->
+                    <p id="description" class="list-group-item-text newsDescription">
+                        <a :href="item.url" target="view_window" style="color: #106ea3; font-size: 15px">
+                            {{item.description}}
+                        </a>
+                    </p>
+                    <span>
+                        <!--新闻来源-->
+                        <strong>{{item.source}}</strong>
+                        <!--新闻日期时间-->
+                        <strong style="float: right">{{item.ctime}}&emsp;&emsp;</strong>
+                    </span>
+                </div>
+                <!--右边图片部分-->
+                <div :class="screenWidth>=768 ? 'col-sm-4' : 'col-sm-12'" style="text-align: center"
+                     :style="{'margin-top': screenWidth>=768 ? '0px' : '5px'}">
+                    <!--新闻图片 圆角 边框 最大宽高+响应式宽高 出错时图片-->
+                    <img :src="item.picUrl" class="img-rounded img-thumbnail newsImg" alt=""
+                         onerror="javascript:this.src='/img/defaultPic.jpg;';">
+                </div>
+            </div>
+        </div>
+        <!--分页信息+跳页输入框+每页条数选择框-->
+        <div id="pageInfo" class="pagination pagination-lg" v-show="records.length>0">
+            <span>当前页共<strong>{{records.length}}</strong>条</span>
+            <span>&nbsp;共<strong>{{pages}}</strong>页</span>
+            <!--页号输入框-->
+            <span id="jumpPage">
+                <span>跳转到:</span>
+                <input type="number" min="1" :max="pages" v-model="jumpPageNum" class="input-group-sm"
+                       style="width: 50px" @keyup.enter="jumpPage()">
+                <button @click="jumpPage()" class="btn-info">GO</button>
+            </span>
+            <!--每页条数选择框-->
+            <span style="margin-left: 10px">
+                <span>每页显示条数</span>
+                <select v-model="size" class="input-group-sm" @change="getPage(1)">
+                <option>10</option>
+                <option>20</option>
+                <option>50</option>
+            </select></span>
+        </div>
+        <!--下面的翻页-->
+        <div v-show="records.length>0" class="fanye">
+            <ul class="pagination" :class="screenWidth>=400 ? 'pagination-lg' : 'pagination-sm'">
+                <!--首页-->
+                <li :class="current<=1 ? 'disabled' : ''">
+                    <a @click="firstPage()" role="button">
+                        <span aria-hidden="true">首页</span>
+                    </a>
+                </li>
+                <!--上一页-->
+                <li :class="current<=1 ? 'disabled' : ''">
+                    <a @click="prePage()" aria-label="Previous" role="button">
+                        <span aria-hidden="true">上一页</span>
+                    </a>
+                </li>
+                <!--当前页号-->
+                <li class="active"><a>{{current}}</a></li>
+                <!--下一页-->
+                <li :class="current>=pages ? 'disabled' : ''">
+                    <a @click="nextPage()" aria-label="Next" role="button">
+                        <span aria-hidden="true">下一页</span>
+                    </a>
+                </li>
+                <!--末页-->
+                <li :class="current>=pages ? 'disabled' : ''">
+                    <a @click="lastPage()" role="button">
+                        <span aria-hidden="true">末页</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <!--无数据时显示的提示-->
+        <div v-show="records.length==0">
+            <div class="alert alert-danger nodata" role="alert">啊哦，进入了未知的领域！</div>
+        </div>
+    </div>
+    <!--回顶按钮-->
+    <img src="/img/backToTop.png" alt="回到顶部" title="回到顶部" @click="returnTop()" class="img-circle"
+         style="background-color: ghostwhite;position: fixed;bottom: 120px;right: 20px"/>
+</div>
+<!--页脚-->
+<footer id="footer"></footer>
+<script>
+    /*加载页脚*/
+    $("#footer").load("footer.html");
+    var app = new Vue({
+        el: "#app",
+        data: {
+            type: 4,    //新闻类型，国际4
+            records: [], //新闻数据列表
+            total: 0, //总记录条数
+            current: 1, //当前页号
+            size: 10, //每页显示条数
+            pages: 0, //总页数
+            keyword: "", //关键字
+            jumpPageNum: 1, //双向绑定，要跳转的页号
+            isLoggedin: false, //用户是否登录
+            user: null, //登录用户信息
+            screenWidth: 1024, //屏幕宽度
+        },
+        created: function () {
+            this.getPage(this.current); //页面加载时请求数据
+            this.checkLoginState(); //检查用户是否登录
+            this.screenWidth = document.body.clientWidth;
+            var that = this;
+            window.onresize = function () { //监听屏幕宽高变化
+                that.screenWidth = document.body.clientWidth;
+            };
+        },
+        methods: {
+            //获取新闻数据方法，分页（目标页号）
+            getPage: function (curPage) {
+                var that = this;
+                axios.get("/news/getPage", {
+                    params: {
+                        curPage: curPage,
+                        type: this.type,
+                        size: this.size,
+                        keyword: this.keyword
+                    }
+                }).then(function (res) {
+                    that.records = res.data.data.records; //新闻数据列表
+                    that.total = res.data.data.total; //总记录条数
+                    that.current = res.data.data.current; //当前页号
+                    that.pages = res.data.data.pages; //总页数
+                    that.returnTop(); //回到顶部
+                    that.autoFooter(); //自动页脚
+                }).catch(function (err) {
+                    console.log(err);
+                    that.returnTop(); //回到顶部
+                });
+            },
+            //上一页
+            prePage: function () {
+                if (this.current > 1) { //不是第一页才能上一页
+                    this.getPage(this.current - 1);
+                }
+            },
+            //下一页
+            nextPage: function () {
+                if (this.current < this.pages) { //不是最后一页才能下一页
+                    this.getPage(this.current + 1);
+                }
+            },
+            //跳首页（第一页）
+            firstPage: function () {
+                if (this.current > 1) { //当前不是首页
+                    this.getPage(1);
+                }
+            },
+            //跳末页
+            lastPage: function () {
+                if (this.current < this.pages) { //不是末页
+                    this.getPage(this.pages);
+                }
+            },
+            //按关键字搜索
+            searchByKeyword: function () {
+                this.getPage(1);
+            },
+            //页面回到顶部
+            returnTop: function () {
+                navibar.scrollIntoView();
+            },
+            //按页号跳转
+            jumpPage: function () {
+                if (this.jumpPageNum >= 1 && this.jumpPageNum <= this.pages) {
+                    this.getPage(this.jumpPageNum);
+                }
+            },
+            //清空关键字，并重新搜索
+            clearKeyword: function () {
+                this.keyword = "";
+                this.searchByKeyword();
+            },
+            //鼠标移入添加active样式
+            addActive: function ($event) {
+                $event.currentTarget.className = "active";
+            },
+            //鼠标移出移除active样式
+            removeActive: function ($event) {
+                $event.currentTarget.className = "";
+            },
+            //检查用户是否登录
+            checkLoginState: function () {
+                var that = this;
+                axios.get("/user/checkLoginState")
+                    .then(function (res) {
+                        if (res.data.flag) { //已登录
+                            that.isLoggedin = true; //修改页面状态
+                        } else { //未登录，跳转登录页
+                            // alert("您当前尚未登录");
+                            // location.href = "login.html";
+                        }
+                    }).catch(function (err) {
+                    console.log(err);
+                })
+            },
+            //用户退出登录
+            logout: function () {
+                var that = this;
+                if (confirm("您确定要退出吗？")) {
+                    axios.delete("/user/logout")
+                        .then(function (res) {
+                            if (res.data.flag) { //退出登录成功
+                                that.isLoggedin = false; //修改页面状态
+                                that.user = null; //还原默认user
+                                location.href = "login.html"; //跳转登录页
+                            }
+                        }).catch(function (err) {
+                        console.log(err);
+                    })
+                }
+            },
+            //自动页脚
+            autoFooter: function () {
+                //在vue下次渲染完成时执行
+                this.$nextTick(function () {
+                    //获取页面主体高度
+                    var appHeight = $("#app").height();
+                    //获取页脚高度
+                    var footer = $("#footer");
+                    var footerHeight = footer.height();
+                    //获取屏幕高度
+                    var screenHeight = document.documentElement.clientHeight;
+                    //如果主体高度加页脚高度小于屏幕高度，将页脚固定在底部
+                    if (appHeight + footerHeight <= screenHeight) {
+                        footer.addClass("navbar-fixed-bottom");
+                    } else {
+                        footer.removeClass("navbar-fixed-bottom");
+                    }
+                });
+            }
+        }
+    })
+</script>
+</body>
+</html>

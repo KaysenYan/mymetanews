@@ -1,0 +1,79 @@
+.newsBtn {
+    /*新闻条目div*/
+    /*height: 200px;*/
+    min-height: 200px;
+    background: #fffefe;
+    margin-top: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.newsTitle {
+    /*新闻标题*/
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.newsDescription {
+    /*新闻描述*/
+    min-height: 120px;
+    /*font-size: 15px;*/
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+}
+
+.newsImg {
+    /*最大宽高*/
+    height: 180px;
+    width: 320px;
+    /*当图片大于宽高时，裁切显示图片中间部分*/
+    object-fit: cover;
+}
+
+.app {
+    /*透明背景，以展示body的背景图*/
+    background-color: transparent;
+}
+
+.bodyDiv {
+    /*中间主体，不包括导航栏*/
+    background-color: #ffffff;
+}
+
+#pageInfo {
+    /*分页信息部分*/
+    float: left;
+    margin-left: 50px;
+}
+
+#pageInfo > * {
+    /*分页信息部分字体大小*/
+    font-size: 20px;
+}
+
+.fanye {
+    /*翻页按钮部分*/
+    float: right;
+    margin-right: 50px;
+}
+
+#jumpPage {
+    /*跳页文字*/
+    margin-left: 10px;
+}
+
+.nodata {
+    /*无数据的提示框*/
+    margin: 10px;
+    text-align: center;
+    font-size: 20px;
+}
+
+#navibarDiv li {
+    /*导航栏-新闻类别*/
+    margin-left: 5px;
+}
